@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoveDetect", "MoveDetect.vcxproj", "{9773C96C-1B10-4D15-BEFB-A6BC2950AB08}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bkgModle", "bkgModle.vcxproj", "{BC2B9975-FEA4-4A54-AE65-C56EA85CEE82}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,10 +13,6 @@ Global
 		{9773C96C-1B10-4D15-BEFB-A6BC2950AB08}.Debug|Win32.Build.0 = Debug|Win32
 		{9773C96C-1B10-4D15-BEFB-A6BC2950AB08}.Release|Win32.ActiveCfg = Release|Win32
 		{9773C96C-1B10-4D15-BEFB-A6BC2950AB08}.Release|Win32.Build.0 = Release|Win32
-		{BC2B9975-FEA4-4A54-AE65-C56EA85CEE82}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BC2B9975-FEA4-4A54-AE65-C56EA85CEE82}.Debug|Win32.Build.0 = Debug|Win32
-		{BC2B9975-FEA4-4A54-AE65-C56EA85CEE82}.Release|Win32.ActiveCfg = Release|Win32
-		{BC2B9975-FEA4-4A54-AE65-C56EA85CEE82}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

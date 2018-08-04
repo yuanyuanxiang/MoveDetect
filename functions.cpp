@@ -1,5 +1,6 @@
 #include "functions.h"
 
+// 参考: https://blog.csdn.net/fwq990720/article/details/79284735
 bool IsInterSec(const Line &line, const Rect &rt)
 {
 	int x1 = rt.x, y1 = rt.y, x2 = x1 + rt.width, y2 = y1 + rt.height, 
@@ -23,80 +24,72 @@ bool IsInterSec(const Line &line, const Rect &rt)
 		return true;
 }
 
-Mat MoveDetect(const Mat &last, const Mat &cur, const Line &line)
+Mat MoveDetect(const Mat &cur, Mat &back, const Line &line, double k)
 {
-	Mat result = cur.clone();
-	//1.将cur和last转为灰度图
-	Mat gray1, gray2;
-	cvtColor(last, gray1, CV_BGR2GRAY);
-	cvtColor(cur, gray2, CV_BGR2GRAY);
-	//2.将cur和last做差
-	Mat diff;
-	absdiff(gray1, gray2, diff);
-	//3.对差值图diff_thresh进行阈值化处理
-	Mat diff_thresh;
-	threshold(diff, diff_thresh, 50.0, 255.0, CV_THRESH_BINARY);
-	//4.腐蚀
-	Mat kernel_erode = getStructuringElement(MORPH_RECT, Size(3, 3));
-	Mat kernel_dilate = getStructuringElement(MORPH_RECT, Size(18, 18));
-	erode(diff_thresh, diff_thresh, kernel_erode);
-	//5.膨胀
-	dilate(diff_thresh, diff_thresh, kernel_dilate);
-	//6.查找轮廓并绘制轮廓
-	std::vector<std::vector<Point> > contours;
-	findContours(diff_thresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-	drawContours(result, contours, -1, Scalar(255.0, 255.0, 255.0), 1.5);
-	//7.查找正外接矩形
-	cv::line(result, line.p1, line.p2, Scalar(255.0, 0, 0), 2);
-	for (std::vector<std::vector<Point> >::const_iterator i = contours.begin(); i != contours.end(); ++i)
+	Mat result;
+	//如果是第一帧，需要初始化背景图像
+	if(back.empty())
 	{
-		Rect boundRect = boundingRect(*i);
-		if (boundRect.width > MIN_SIZE && boundRect.height > MIN_SIZE)
+		cvtColor(cur, back, CV_BGR2GRAY);
+	}else
+	{
+		//1.将当前图像转为灰度图
+		Mat gray;
+		cvtColor(cur, gray, CV_BGR2GRAY);
+		//2.当前帧跟背景图相减
+		Mat diff;
+		absdiff(gray, back, diff);
+		//2.1 更新背景图像
+		back = (1-k) * back + k * gray;
+		//3.对差值图diff_thresh进行阈值化处理
+		Mat diff_thresh;
+		threshold(diff, diff_thresh, 60.0, 255.0, CV_THRESH_BINARY);
+		//4.腐蚀
+		Mat kernel_erode = getStructuringElement(MORPH_RECT, Size(3, 3));
+		Mat kernel_dilate = getStructuringElement(MORPH_RECT, Size(18, 18));
+		erode(diff_thresh, diff_thresh, kernel_erode);
+		//5.膨胀
+		dilate(diff_thresh, diff_thresh, kernel_dilate);
+		//6.查找轮廓并绘制轮廓
+		std::vector<std::vector<Point> > contours;
+		findContours(diff_thresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+		result = cur.clone();
+		drawContours(result, contours, -1, Scalar(255.0, 255.0, 255.0), 1.5);
+		//7.查找正外接矩形
+		cv::line(result, line.p1, line.p2, Scalar(255.0, 0, 0), 2);
+		for (std::vector<std::vector<Point> >::const_iterator i = contours.begin(); i != contours.end(); ++i)
 		{
-			Scalar color = IsInterSec(line, boundRect) ? Scalar(0, 0, 255.0) : Scalar(0, 255.0, 0);
-			rectangle(result, boundRect, color, 2);
+			Rect boundRect = boundingRect(*i);
+			if (boundRect.width > MIN_SIZE && boundRect.height > MIN_SIZE)
+			{
+				Scalar color = IsInterSec(line, boundRect) ? Scalar(0, 0, 255.0) : Scalar(0, 255.0, 0);
+				rectangle(result, boundRect, color, 2);
+			}
 		}
 	}
 	return result;
 }
 
-Mat MoveDetect(const Mat &cur, Mat &back, double k, const Line &line)
+int RunTest(double k)
 {
-	//1.将当前图像转为灰度图
-	Mat gray;
-	cvtColor(cur, gray, CV_BGR2GRAY);
-	gray.convertTo(gray, CV_32FC1);
-	//2.当前帧跟背景图相减
-	Mat diff;
-	absdiff(gray, back, diff);
-	diff.convertTo(diff, CV_8UC1);
-	//3.对差值图diff_thresh进行阈值化处理
-	Mat diff_thresh;
-	threshold(diff, diff_thresh, 60.0, 255.0, CV_THRESH_BINARY);
-	//4.腐蚀
-	Mat kernel_erode = getStructuringElement(MORPH_RECT, Size(3, 3));
-	Mat kernel_dilate = getStructuringElement(MORPH_RECT, Size(18, 18));
-	erode(diff_thresh, diff_thresh, kernel_erode);
-	//5.膨胀
-	dilate(diff_thresh, diff_thresh, kernel_dilate);
-	//6.查找轮廓并绘制轮廓
-	std::vector<std::vector<Point> > contours;
-	findContours(diff_thresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-	Mat result = cur.clone();
-	drawContours(result, contours, -1, Scalar(255.0, 255.0, 255.0), 1.5);
-	//7.查找正外接矩形
-	cv::line(result, line.p1, line.p2, Scalar(255.0, 0, 0), 2);
-	for (std::vector<std::vector<Point> >::const_iterator i = contours.begin(); i != contours.end(); ++i)
-	{
-		Rect boundRect = boundingRect(*i);
-		if (boundRect.width > MIN_SIZE && boundRect.height > MIN_SIZE)
-		{
-			Scalar color = IsInterSec(line, boundRect) ? Scalar(0, 0, 255.0) : Scalar(0, 255.0, 0);
-			rectangle(result, boundRect, color, 2);
-		}
-	}
-	//8.更新背景
-	back = (1-k) * back + k * gray;
+	VideoCapture video(0);
+	if(!video.isOpened())
+		return -1;
 
-	return result;
+	Mat back, frame; // 存储前一帧和当前帧
+	Line line(Point(320, 0), Point(320, 640));
+	cvNamedWindow("拌线检测", CV_WINDOW_NORMAL);
+	while(1)
+	{
+		video >> frame;
+		if (frame.empty())// 对帧进行异常检测
+			continue;
+
+		Mat result = MoveDetect(frame, back, line, k);
+		if(!result.empty()) imshow("拌线检测", result);
+		if (waitKey(40) == 27)// 按原25fps显示, ESC退出
+			break;
+	}
+	destroyAllWindows();
+	return 0;
 }
