@@ -8,6 +8,6 @@
 
 int main()
 {
-	int s = RunTest(0.618);
+	int s = RunTest(0.618, "movie.mp4");
 	return s;
 }

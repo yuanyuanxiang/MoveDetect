@@ -70,14 +70,20 @@ Mat MoveDetect(const Mat &cur, Mat &back, const Line &line, double k)
 	return result;
 }
 
-int RunTest(double k)
+int RunTest(double k, const char *file)
 {
-	VideoCapture video(0);
-	if(!video.isOpened())
-		return -1;
-
+	VideoCapture video;
+	video.open(file);
+	if(!video.isOpened() && file){
+		video.open(0);
+		if (!video.isOpened())
+			return -1;
+	}
 	Mat back, frame; // 存储前一帧和当前帧
-	Line line(Point(320, 0), Point(320, 640));
+	video.read(frame);
+	if (frame.empty())
+		return -2;
+	Line line(Point(frame.cols/4, 0), Point(frame.cols/4, frame.rows));
 	cvNamedWindow("拌线检测", CV_WINDOW_NORMAL);
 	while(1)
 	{

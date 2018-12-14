@@ -28,4 +28,4 @@ bool IsInterSec(const Line &line, const Rect &rect);
 Mat MoveDetect(const Mat &cur, Mat &back, const Line &line, double k = 1.0);
 
 // 运行运动目标检测的例子（k=1时背景图像采用上一帧图像）
-int RunTest(double k);
+int RunTest(double k, const char *file);
